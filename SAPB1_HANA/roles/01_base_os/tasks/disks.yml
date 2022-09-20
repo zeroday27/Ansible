@@ -1,0 +1,115 @@
+# tasks file for saphana_disk
+---
+# tasks file for USR SAP disk
+- name: Create usrsap primary partitions
+  parted: 
+    device: '{{ usrsap }}'
+    number: 1
+    part_end: "100%"
+    state: present
+- name: create filesystem for '{{ usrsap_dir }}'
+  filesystem: 
+    device:  "{{ usrsap_par }}"
+    fstype: ext4
+- name: create mount points for '{{ usrsap_dir }}'
+  file: 
+    path: '{{ usrsap_dir }}'
+    state: directory
+- name: mount disk to point for '{{ usrsap_dir }}'
+  mount:
+    path: '{{ usrsap_dir }}'
+    src: "{{ usrsap_par }}"
+    fstype: ext4
+    state: mounted
+
+# tasks file for HANA Log disk
+- name: Create '{{ hanalog_dir }}' primary partitions
+  parted: 
+    device: '{{ hanalog }}'
+    number: 1
+    part_start: 1MiB
+    part_end: "100%"
+    state: present
+- name: create filesystem for '{{ hanalog_dir }}'
+  filesystem: 
+    device:  "{{ hanalog_par }}"
+    fstype: xfs
+- name: create mount points for '{{ hanalog_dir }}'
+  file: 
+    path: '{{ hanalog_dir }}'
+    state: directory
+- name: mount disk to point for '{{ hanalog_dir }}'
+  mount:
+    path: '{{ hanalog_dir }}'
+    src: "{{ hanalog_par }}"
+    fstype: xfs
+    state: mounted
+
+# tasks file for HANA Data disk
+- name: Create '{{ hanadata_dir }}' primary partitions
+  parted: 
+    device: '{{ hanadata }}'
+    number: 1
+    part_start: 1MiB
+    part_end: "100%"
+    state: present
+- name: create filesystem for '{{ hanadata_dir }}'
+  filesystem: 
+    device:  "{{ hanadata_par }}"
+    fstype: xfs
+- name: create mount points for '{{ hanadata_dir }}'
+  file: 
+    path: '{{ hanadata_dir }}'
+    state: directory
+- name: mount disk to point for '{{ hanadata_dir }}'
+  mount:
+    path: '{{ hanadata_dir }}'
+    src: "{{ hanadata_par }}"
+    fstype: xfs
+    state: mounted
+
+# tasks file for HANA Backup disk
+- name: Create '{{ hanabackup_dir }}' primary partitions
+  parted:
+    device: '{{ hanabackup }}'
+    number: 1
+    part_start: 1MiB
+    part_end: "100%"
+    state: present
+- name: create filesystem for '{{ hanabackup_dir }}'
+  filesystem:
+    device:  "{{ hanabackup_par }}"
+    fstype: xfs
+- name: create mount points for '{{ hanabackup_dir }}'
+  file:
+    path: '{{ hanabackup_dir }}'
+    state: directory
+- name: mount disk to point for '{{ hanabackup_dir }}'
+  mount:
+    path: '{{ hanabackup_dir }}'
+    src: "{{ hanabackup_par }}"
+    fstype: xfs
+    state: mounted
+
+# tasks file for _disk
+- name: Create '{{ hanashared_dir }}' primary partitions
+  parted: 
+    device: '{{ hanashared }}'
+    number: 1
+    part_start: 1MiB
+    part_end: "100%"
+    state: present
+- name: create filesystem for '{{ hanashared_dir }}'
+  filesystem: 
+    device:  "{{ hanashared_par }}"
+    fstype: xfs
+- name: create mount points for '{{ hanashared_dir }}'
+  file: 
+    path: '{{ hanashared_dir }}'
+    state: directory
+- name: mount disk to point for '{{ hanashared_dir }}'
+  mount:
+    path: '{{ hanashared_dir }}'
+    src: "{{ hanashared_par }}"
+    fstype: xfs
+    state: mounted

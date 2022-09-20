@@ -1,0 +1,21 @@
+---
+# vars file for base_os
+
+
+timezone: Asia/Yangon
+usrsap: /dev/sdb
+usrsap_par: /dev/sdb1
+hanalog: /dev/sdc
+hanalog_par: /dev/sdc1
+hanadata: /dev/sdd
+hanadata_par: /dev/sdd1
+hanabackup: /dev/sde
+hanabackup_par: /dev/sde1
+hanashared: /dev/sdf
+hanashared_par: /dev/sdf1
+usrsap_dir: /usr/sap
+hanalog_dir: /hana/log
+hanadata_dir: /hana/data
+hanashared_dir: /hana/shared
+hanabackup_dir: /hana/backup
+hostname: hana2111.sapb1mm.com

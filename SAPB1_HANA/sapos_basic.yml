@@ -1,0 +1,6 @@
+---
+- name: Configure SAP OS Basic with Base OS role
+  hosts: db01
+  gather_facts: yes 
+  roles: 
+    - base_os
