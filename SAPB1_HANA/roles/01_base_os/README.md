@@ -1,7 +1,7 @@
-Role Name
+SAP Basic System Configuration Role
 =========
 
-A brief description of the role goes here.
+Config Basic facts for SLES 15 and above. 
 
 Requirements
 ------------
