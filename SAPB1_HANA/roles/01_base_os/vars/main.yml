@@ -18,4 +18,4 @@ hanalog_dir: /hana/log
 hanadata_dir: /hana/data
 hanashared_dir: /hana/shared
 hanabackup_dir: /hana/backup
-hostname: hana2111.sapb1mm.com
+hostname: hana2111.local
