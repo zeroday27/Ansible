@@ -1,0 +1,120 @@
+# This playbook installs a complete LAMP stack on Ubuntu, Amazon Linux 2, or CentOS
+
+- hosts: localhost
+  become: yes
+  tasks:
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+      when: ansible_distribution == 'Ubuntu'
+    - name: Install Apache
+      yum:
+        name: httpd
+        state: present
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Install MySQL
+      apt:
+        name: mysql-server
+        state: present
+      when: ansible_distribution == 'Ubuntu'
+    - name: Install MySQL
+      yum:
+        name: mariadb-server
+        state: present
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Install PHP
+      apt:
+        name: php libapache2-mod-php php-mysql
+        state: present
+      when: ansible_distribution == 'Ubuntu'
+    - name: Install PHP
+      yum:
+        name: php php-mysqlnd
+        state: present
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Start Apache
+      service:
+        name: apache2
+        state: started
+      when: ansible_distribution == 'Ubuntu'
+    - name: Start Apache
+      service:
+        name: httpd
+        state: started
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Start MySQL
+      service:
+        name: mysql
+        state: started
+      when: ansible_distribution == 'Ubuntu'
+    - name: Start MySQL
+      service:
+        name: mariadb
+        state: started
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Create a test page
+      copy:
+        content: "<html><body><h1>Hello World</h1></body></html>"
+        dest: /var/www/html/index.html
+    - name: Create MySQL users
+      mysql_user:
+        name: "{{ item.name }}"
+        password: "{{ item.password }}"
+        priv: "*.*:ALL"
+        state: present
+      loop:
+        - { name: 'root', password: 'password' }
+        - { name: 'dbadmin01', password: 'password' }
+    - name: Install mod_ssl
+      yum:
+        name: mod_ssl
+        state: present
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Redirect http to https
+      blockinfile:
+        path: /etc/httpd/conf/httpd.conf
+        block: |
+          RewriteEngine On
+          RewriteCond %{HTTPS} off
+          RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Enable HSTS
+      blockinfile:
+        path: /etc/httpd/conf/httpd.conf
+        block: |
+          Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Enable XSS protection
+      blockinfile:
+        path: /etc/httpd/conf/httpd.conf
+        block: |
+          Header set X-XSS-Protection "1; mode=block"
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Create SFTP user
+      user:
+        name: ftpuser01
+        shell: /sbin/nologin
+        groups: sftp
+        createhome: yes
+        home: /sftp/ftpuser01
+    - name: Set FTP root directory to Apache project folder
+      set_fact:
+        ftp_root: /var/www/html
+      when: ansible_distribution == 'Ubuntu'
+    - name: Set FTP root directory to Apache project folder
+      set_fact:
+        ftp_root: /var/www/html
+      when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Configure SFTP
+      blockinfile:
+        path: /etc/ssh/sshd_config
+        block: |
+          Match Group sftp
+          ChrootDirectory {{ ftp_root }}
+          ForceCommand internal-sftp
+          AllowTcpForwarding no
+          X11Forwarding no
+    - name: Restart sshd
+      service:
+        name: sshd
