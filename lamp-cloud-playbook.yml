@@ -2,60 +2,76 @@
 
 - hosts: localhost
   become: yes
+  become_method: sudo
   tasks:
-    - name: Install Apache
+    - name: Set timezone to Asia/HongKong
+      community.general.timezone:
+        name: "Asia/Hong_Kong"
+    - name: Set a hostname
+      ansible.builtin.hostname:
+        name: ansiblecontrol01
+    - name: Install Apache on Ubuntu
       apt:
         name: apache2
         state: present
       when: ansible_distribution == 'Ubuntu'
-    - name: Install Apache
+    - name: Install Apache on Amazon Linux
       yum:
         name: httpd
         state: present
       when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
-    - name: Install MySQL
+    - name: Install MySQL on Ubuntu
       apt:
         name: mysql-server
         state: present
       when: ansible_distribution == 'Ubuntu'
-    - name: Install MySQL
+    - name: Install Maria DB  on Amazon Linux
       yum:
         name: mariadb-server
         state: present
       when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
-    - name: Install PHP
+    - name: Install PHP on Ubuntu 
       apt:
-        name: php libapache2-mod-php php-mysql
+        name: 
+          - php 
+          - libapache2-mod-php
+          - php-mysql
+          - python3-pip
         state: present
       when: ansible_distribution == 'Ubuntu'
-    - name: Install PHP
+    - name: Install PHP on Amazon Linux
       yum:
-        name: php php-mysqlnd
+        name: php php-mysqlnd python3-pip
         state: present
       when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
-    - name: Start Apache
+    - name: Make sure install pymysql 
+      pip: 
+        name: pymysql
+        state: present
+        executable: pip3
+    - name: Start Apache on Ubuntu 
       service:
         name: apache2
         state: started
       when: ansible_distribution == 'Ubuntu'
-    - name: Start Apache
+    - name: Start Apache on Amazon Linux 
       service:
         name: httpd
         state: started
       when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
-    - name: Start MySQL
+    - name: Start MySQL on Ubuntu
       service:
         name: mysql
         state: started
       when: ansible_distribution == 'Ubuntu'
-    - name: Start MySQL
+    - name: Start Maria DB on Amazon Linux 
       service:
         name: mariadb
         state: started
       when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
     - name: Create a test page
       copy:
-        content: "<html><body><h1>Hello World</h1></body></html>"
+        content: "<html><body><h1>Hello World! Ansible Deployment</h1></body></html>"
         dest: /var/www/html/index.html
     - name: Create MySQL users
       mysql_user:
@@ -64,9 +80,8 @@
         priv: "*.*:ALL"
         state: present
       loop:
-        - { name: 'root', password: 'password' }
         - { name: 'dbadmin01', password: 'password' }
-    - name: Install mod_ssl
+    - name: Install mod_ssl on Amazon Linux
       yum:
         name: mod_ssl
         state: present
@@ -91,6 +106,10 @@
         block: |
           Header set X-XSS-Protection "1; mode=block"
       when: ansible_distribution == 'Amazon' or ansible_distribution == 'CentOS'
+    - name: Ensure group "sftp group" exists
+      ansible.builtin.group:
+        name: sftp
+        state: present 
     - name: Create SFTP user
       user:
         name: ftpuser01
