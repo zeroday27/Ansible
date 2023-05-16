@@ -1,0 +1,112 @@
+---
+- name: Install LAMP stack and related software
+  hosts: localhost
+  become: true
+  when: ansible_distribution == 'Ubuntu'
+
+  tasks:
+    - name: Set timezone to Asia/HongKong
+      community.general.timezone:
+        name: "Asia/Hong_Kong"
+    - name: Set a hostname
+      ansible.builtin.hostname:
+        name: ansiblecontrol01
+    - name: Update package list
+      apt:
+        update_cache: yes
+#Ubuntu Installation 
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+
+    - name: Install PHP
+      apt:
+        name: 
+        - php8.1
+        - libapache2-mod-php
+        - php-mysql
+        - python3-pip
+        state: present
+
+    - name: Install MySQL
+      apt:
+        name: mysql-server
+        state: present
+
+    - name: Install PHPMyAdmin
+      apt:
+        name: phpmyadmin
+        state: present
+      vars:
+        - dbpass: your_mysql_password
+      become_user: root
+      become_method: su
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      register: phpmyadmin_output
+
+    - name: Configure PHPMyAdmin
+      lineinfile:
+        path: /etc/dbconfig-common/phpmyadmin.conf
+        regexp: '^dbc_dbpass='
+        line: 'dbc_dbpass={{ dbpass }}'
+      when: phpmyadmin_output is changed
+
+    - name: Install Composer
+      apt:
+        name: composer
+        state: present
+
+    - name: Install Laravel
+      composer:
+        global_command: true
+        command: require laravel/installer
+    - name: Create a test page
+      copy:
+        content: "<html><body><h1>Hello World! Ansible Deployment</h1></body></html>"
+        dest: /var/www/html/index.html
+
+    - name: Start Apache
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
+
+    - name: Enable MySQL
+      service:
+        name: mysql
+        enabled: true
+        state: started
+    - name: Ensure group "sftp group" exists
+      ansible.builtin.group:
+        name: sftp
+        state: present 
+    - name: Create SFTP user
+      user:
+        name: ftpuser01
+        shell: /sbin/nologin
+        groups: sftp
+        createhome: yes
+        home: /sftp/ftpuser01
+    - name: Set FTP root directory to Apache project folder
+      set_fact:
+        ftp_root: /var/www/html
+      when: ansible_distribution == 'Ubuntu'
+    - name: Configure SFTP
+      blockinfile:
+        path: /etc/ssh/sshd_config
+        block: |
+          Match Group sftp
+          ChrootDirectory {{ ftp_root }}
+          ForceCommand internal-sftp
+          AllowTcpForwarding no
+          X11Forwarding no
+    - name: Restart sshd
+      service:
+        name: sshd
