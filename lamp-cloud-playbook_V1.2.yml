@@ -39,7 +39,7 @@
         name: phpmyadmin
         state: present
       vars:
-        - dbpass: your_mysql_password
+        - dbpass: {{your_mysql_password}}
       become_user: root
       become_method: su
       environment:
